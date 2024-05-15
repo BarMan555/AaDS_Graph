@@ -15,3 +15,10 @@ TEST(Graph, add_vertex)
 	graph.add_vertex(10);
 	ASSERT_TRUE(graph.has_vertex(10));
 }
+
+TEST(Graph, remove_vertex)
+{
+	Graph<int, int> graph;
+	graph.add_vertex(10);
+	ASSERT_TRUE(graph.remove_vertex(10));
+}

@@ -59,4 +59,23 @@ namespace GraphSpace
 		_vertices.insert(v);
 		_edges.insert({ v, {} });
 	}
+
+	template<typename Vertex, typename Distance>
+	bool GraphSpace::Graph<Vertex, Distance>::remove_vertex(const Vertex& v)
+	{
+		if (!has_vertex(v))
+			return false;
+		_vertices.erase(v);
+		_edges.erase(v);
+
+		for (auto& vert : _vertices) {
+			auto& e = _edges[vert];
+			for (auto& it : e) {
+				if (it.to == v) {
+					it.to = vert;
+				};
+			};
+		}
+		return true;
+	}
 }
