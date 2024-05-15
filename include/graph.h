@@ -57,6 +57,6 @@ namespace GraphSpace
 		if (has_vertex(v)) return;
 
 		_vertices.insert(v);
-		_edges.insert(v, std::list<Edge>());
+		_edges.insert({ v, {} });
 	}
 }
