@@ -45,14 +45,14 @@ namespace GraphSpace
 	};
 
 	template<typename Vertex, typename Distance>
-	bool GraphSpace::Graph<Vertex, Distance>::has_vertex(const Vertex& v) const
+	bool Graph<Vertex, Distance>::has_vertex(const Vertex& v) const
 	{
 		if (_vertices.find(v) != _vertices.end()) return true;
 		return false;
 	}
 
 	template<typename Vertex, typename Distance>
-	void GraphSpace::Graph<Vertex, Distance>::add_vertex(const Vertex& v)
+	void Graph<Vertex, Distance>::add_vertex(const Vertex& v)
 	{
 		if (has_vertex(v)) return;
 
@@ -61,7 +61,7 @@ namespace GraphSpace
 	}
 
 	template<typename Vertex, typename Distance>
-	bool GraphSpace::Graph<Vertex, Distance>::remove_vertex(const Vertex& v)
+	bool Graph<Vertex, Distance>::remove_vertex(const Vertex& v)
 	{
 		if (!has_vertex(v))
 			return false;
@@ -77,5 +77,16 @@ namespace GraphSpace
 			};
 		}
 		return true;
+	}
+
+	template<typename Vertex, typename Distance>
+	std::vector<Vertex> Graph<Vertex, Distance>::vertices() const
+	{
+		std::vector<Vertex> result;
+		for (auto& v : _vertices)
+		{
+			result.push_back(v);
+		}
+		return result;
 	}
 }
