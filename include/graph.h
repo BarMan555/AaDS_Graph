@@ -2,7 +2,7 @@
 #include <vector>
 #include <set>
 #include <unordered_map>
-#include <list>
+#include <vector>
 
 namespace GraphSpace
 {
@@ -12,12 +12,16 @@ namespace GraphSpace
 
 		struct Edge
 		{
-			Vertex from, to;
+			Vertex from;
+			Vertex to;
 			Distance distance;
 			Edge(Vertex from, Vertex to, Distance distance) :from(from), to(to), distance(distance) {}
+			bool operator==(const Edge& other) const {
+				return from == other.from && to == other.to && distance == other.distance;
+			}
 		};
 		std::set<Vertex> _vertices;
-		std::unordered_map<Vertex, std::list<Edge>> _edges;
+		std::unordered_map<Vertex, std::vector<Edge>> _edges;
 
 	public:
 
@@ -47,8 +51,7 @@ namespace GraphSpace
 	template<typename Vertex, typename Distance>
 	bool Graph<Vertex, Distance>::has_vertex(const Vertex& v) const
 	{
-		if (_vertices.find(v) != _vertices.end()) return true;
-		return false;
+		return _vertices.find(v) != _vertices.end();
 	}
 
 	template<typename Vertex, typename Distance>
@@ -89,4 +92,12 @@ namespace GraphSpace
 		}
 		return result;
 	}
+
+	template<typename Vertex, typename Distance>
+	void GraphSpace::Graph<Vertex, Distance>::add_edge(const Vertex& from, const Vertex& to, const Distance& d)
+	{
+		_edges[from].push_back({ from, to, d });
+	}
+
+
 }
