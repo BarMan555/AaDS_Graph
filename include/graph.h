@@ -1,8 +1,9 @@
 #pragma once
-#include <vector>
+#include <algorithm>
 #include <set>
 #include <unordered_map>
 #include <vector>
+#include <queue>
 
 namespace GraphSpace
 {
@@ -44,7 +45,61 @@ namespace GraphSpace
 		size_t degree(const Vertex& v) const; //степень вершины
 
 		//поиск кратчайшего пути
-		std::vector<Edge> shortest_path(const Vertex& from, const Vertex& to) const;
+		std::vector<Edge> shortest_path(const Vertex& from, const Vertex& to) const
+		{
+			if (!has_vertex(from) || !has_vertex(to)) {
+				throw std::invalid_argument("Vertex not found in the graph");
+			}
+
+			std::unordered_map<Vertex, Distance> min_weight;
+			for (const Vertex& v : _vertices) {
+				min_weight[v] = std::numeric_limits<Distance>::max();
+			}
+			min_weight[from] = 0;
+
+
+			std::priority_queue<std::pair<Distance, Vertex>> q;
+			q.push({ 0, from });
+
+			std::unordered_map<Vertex, Vertex> previous;
+			while (!q.empty()) {
+				std::pair<Distance, Vertex> temp = q.top();
+				q.pop();
+
+				Distance curr_weight = temp.first;
+				Vertex curr_vertex = temp.second;
+
+				if (curr_weight > min_weight[curr_vertex]) {
+					continue;
+				}
+				if (_edge.find(curr_vertex) == _edge.end())
+					continue;
+				for (const Edge& edge : _edge.at(curr_vertex)) {
+					Distance new_weight = curr_weight + edge.distance;
+					if (new_weight < min_weight[edge.to]) {
+						previous[edge.to] = curr_vertex;
+						min_weight[edge.to] = new_weight;
+						q.push({ new_weight, edge.to });
+					}
+				}
+			}
+
+			if (min_weight[to] == std::numeric_limits<Distance>::max()) {
+				return {};
+			}
+		
+			std::vector<Edge> path;
+			Vertex current = to;
+			while (current != from) {
+				Vertex parent = previous[current];
+				Distance weight = min_weight[current] - min_weight[parent];
+				path.push_back(Edge{ parent, current, weight });
+				current = parent;
+			}
+			std::reverse(path.begin(), path.end());
+			return path;
+		}
+
 		//обход
 		std::vector<Vertex>  walk(const Vertex& start_vertex)const;
 	};
@@ -110,14 +165,21 @@ namespace GraphSpace
 	template<typename Vertex, typename Distance>
 	bool GraphSpace::Graph<Vertex, Distance>::remove_edge(const Vertex& from, const Vertex& to)
 	{
-		if (!has_edge(from, to)) return false;
-		for (auto& e : _edges[from]) {
-			if (e.to == to) {
-				_edges[from].erase(e);
-				return true;
-			}
-		}
-		return false;
+		auto it = _edges.find(from);
+		if (it == _edges.end()) return false;
+		auto& edges = it->second;
+		edges.erase(std::remove_if(edges.begin(), edges.end(), [&](const Edge& e) { return e.to == to; }), edges.end());
+		return true;
+	}
+
+	template<typename Vertex, typename Distance>
+	bool GraphSpace::Graph<Vertex, Distance>::remove_edge(const Edge& e)
+	{
+		if (!has_edge(e)) return false;
+		auto it = _edges.find(e.from);
+		auto& edges = it->second;
+		edges.erase(std::remove_if(edges.begin(), edges.end(), [&](const Edge& ed) { return e.to == ed.to && e.distance == ed.distance; }), edges.end());
+		return true;
 	}
 
 	template<typename Vertex, typename Distance>
@@ -127,7 +189,8 @@ namespace GraphSpace
 		if (it == _edges.end())
 			return false;
 		auto& edges_vec = it->second;
-		for (auto& e : edges_vec) {
+		for (auto& e : edges_vec) 
+		{
 			if (e.to == to)
 				return true;
 		}
@@ -141,12 +204,29 @@ namespace GraphSpace
 			return false;
 		auto it = _edges.find(e.from);
 		auto& edges_vec = it->second;
-		for (auto& edge : edges_vec) {
-			if (edge.to == e.to) {
-				if (e.distance == edge.distance)
+		for (auto& edge : edges_vec) 
+		{
+			if (edge.to == e.to) 
+			{
+				if (e.distance == edge.distance) 
 					return true;
 			}
 		}
 		return false;
+	}
+
+	template<typename Vertex, typename Distance>
+	size_t GraphSpace::Graph<Vertex, Distance>::order() const
+	{
+		return _vertices.size();
+	}
+
+	template<typename Vertex, typename Distance>
+	size_t GraphSpace::Graph<Vertex, Distance>::degree(const Vertex& v) const
+	{
+		if (!has_vertex(v)) return 0;
+		auto it = _edges.find(v);
+		auto& edges = it->second;
+		return edges.size();
 	}
 }
