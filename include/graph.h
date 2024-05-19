@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <queue>
+#include <stack>
 
 namespace GraphSpace
 {
@@ -101,6 +102,7 @@ namespace GraphSpace
 		}
 
 		//обход
+		std::vector<Vertex>  walk(const Vertex& start_vertex)const;
 		std::vector<Vertex>  walk(const Vertex& start_vertex)const;
 	};
 
@@ -228,5 +230,36 @@ namespace GraphSpace
 		auto it = _edges.find(v);
 		auto& edges = it->second;
 		return edges.size();
+	}
+
+	template<typename Vertex, typename Distance>
+	std::vector<Vertex> GraphSpace::Graph<Vertex, Distance>::walk(const Vertex& start_vertex) const
+	{
+		if (!has_vertex(start_vertex)) throw std::invalid_argument("Not vertex in graph");
+		std::vector<Vertex> vertices;
+		std::stack<Vertex> stack;
+		std::set<Vertex> visited;
+
+		stack.push(start_vertex);
+		while (!stack.empty())
+		{
+			Vertex current = stack.top();
+			stack.pop();
+			if (visited.find(current) != visited.end()) continue;
+
+			vertices.push_back(current);
+			visited.insert(current);
+
+			if (has_vertex(current))
+			{
+				for (auto& edge : edges(current))
+				{
+					if (visited.find(edge) == visited.end())
+						stack.push(edge.to);
+				}
+			}
+		}
+
+		return vertices;
 	}
 }
