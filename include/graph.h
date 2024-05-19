@@ -5,6 +5,7 @@
 #include <vector>
 #include <queue>
 #include <stack>
+#include <exception>
 
 namespace GraphSpace
 {
@@ -24,7 +25,6 @@ namespace GraphSpace
 		std::unordered_map<Vertex, std::vector<Edge>> _edges;
 
 	public:
-
 		bool has_vertex(const Vertex& v) const;
 		void add_vertex(const Vertex& v);
 		bool remove_vertex(const Vertex& v);
@@ -49,7 +49,7 @@ namespace GraphSpace
 		std::vector<Edge> shortest_path(const Vertex& from, const Vertex& to) const
 		{
 			if (!has_vertex(from) || !has_vertex(to)) {
-				throw std::invalid_argument("Vertex not found in the graph");
+				throw std::exception("");
 			}
 
 			std::unordered_map<Vertex, Distance> min_weight;
@@ -73,9 +73,9 @@ namespace GraphSpace
 				if (curr_weight > min_weight[curr_vertex]) {
 					continue;
 				}
-				if (_edge.find(curr_vertex) == _edge.end())
+				if (_edges.find(curr_vertex) == _edges.end())
 					continue;
-				for (const Edge& edge : _edge.at(curr_vertex)) {
+				for (const Edge& edge : _edges.at(curr_vertex)) {
 					Distance new_weight = curr_weight + edge.distance;
 					if (new_weight < min_weight[edge.to]) {
 						previous[edge.to] = curr_vertex;
@@ -103,8 +103,9 @@ namespace GraphSpace
 
 		//обход
 		std::vector<Vertex>  walk(const Vertex& start_vertex)const;
-		std::vector<Vertex>  walk(const Vertex& start_vertex)const;
+		//std::vector<Vertex>  walk(const Vertex& start_vertex)const;
 	};
+
 
 	template<typename Vertex, typename Distance>
 	bool Graph<Vertex, Distance>::has_vertex(const Vertex& v) const
@@ -235,7 +236,7 @@ namespace GraphSpace
 	template<typename Vertex, typename Distance>
 	std::vector<Vertex> GraphSpace::Graph<Vertex, Distance>::walk(const Vertex& start_vertex) const
 	{
-		if (!has_vertex(start_vertex)) throw std::invalid_argument("Not vertex in graph");
+		if (!has_vertex(start_vertex)) throw std::exception("");;
 		std::vector<Vertex> vertices;
 		std::stack<Vertex> stack;
 		std::set<Vertex> visited;
@@ -262,4 +263,40 @@ namespace GraphSpace
 
 		return vertices;
 	}
+
+
+	template<typename Vertex, typename Distance = double>
+	Vertex find_optimal_warehouse(Graph<Vertex, Distance>& graph) {
+
+
+		auto vertices = graph.vertices();
+		Vertex optimal_vertex;
+		Distance min_average_distance = std::numeric_limits<Distance>::max();
+
+		for (const auto& vertex : vertices) {
+			Distance total_distance = 0;
+			int count = 0;
+
+			for (const auto& other : vertices) {
+				if (vertex != other) {
+					auto path = graph.shortest_path(vertex, other);
+					Distance path_distance = 0;
+					for (const auto& edge : path) {
+						path_distance += edge.distance;
+					}
+					total_distance += path_distance;
+					count++;
+				}
+			}
+
+			Distance average_distance = total_distance / count;
+			if (average_distance < min_average_distance) {
+				min_average_distance = average_distance;
+				optimal_vertex = vertex;
+			}
+		}
+
+		return optimal_vertex;
+	}
 }
+
