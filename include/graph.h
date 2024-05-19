@@ -6,6 +6,8 @@
 #include <queue>
 #include <stack>
 #include <exception>
+#include <iostream>
+#include <functional>
 
 namespace GraphSpace
 {
@@ -23,6 +25,8 @@ namespace GraphSpace
 	private:
 		std::set<Vertex> _vertices;
 		std::unordered_map<Vertex, std::vector<Edge>> _edges;
+
+		void _print(const Vertex& vertex) const;
 
 	public:
 		bool has_vertex(const Vertex& v) const;
@@ -103,7 +107,10 @@ namespace GraphSpace
 
 		//обход
 		std::vector<Vertex>  walk(const Vertex& start_vertex)const;
-		//std::vector<Vertex>  walk(const Vertex& start_vertex)const;
+		void walk(const Vertex& start_vertex, std::function<void(const Vertex&)> action) const;
+
+		void print(const Vertex& v) const;
+		void vector_walk(const Vertex& v) const;
 	};
 
 
@@ -236,7 +243,7 @@ namespace GraphSpace
 	template<typename Vertex, typename Distance>
 	std::vector<Vertex> GraphSpace::Graph<Vertex, Distance>::walk(const Vertex& start_vertex) const
 	{
-		if (!has_vertex(start_vertex)) throw std::exception("");;
+		if (!has_vertex(start_vertex)) throw std::exception("");
 		std::vector<Vertex> vertices;
 		std::stack<Vertex> stack;
 		std::set<Vertex> visited;
@@ -264,6 +271,51 @@ namespace GraphSpace
 		return vertices;
 	}
 
+	template<typename Vertex, typename Distance>
+	void GraphSpace::Graph<Vertex, Distance>::walk(const Vertex& start_vertex, std::function<void(const Vertex&)> action) const
+	{
+		if (!has_vertex(start_vertex)) throw std::exception("");
+		std::stack<Vertex> stack;
+		std::set<Vertex> visited;
+		stack.push(start_vertex);
+		while (!stack.empty()) {
+			Vertex current = stack.top();
+			stack.pop();
+			if (visited.find(current) != visited.end()) {
+				continue;
+			}
+
+			action(current);
+			visited.insert(current);
+
+			if (_edges.find(current) != _edges.end()) {
+				for (auto& edge : _edges.at(current)) {
+					if (visited.find(edge.to) == visited.end()) {
+						stack.push(edge.to);
+					}
+				}
+			}
+		}
+	}
+	
+	template<typename Vertex, typename Distance>
+	void GraphSpace::Graph<Vertex, Distance>::_print(const Vertex& vertex) const {
+		std::cout << vertex << " ";
+	}
+
+	template<typename Vertex, typename Distance>
+	void GraphSpace::Graph<Vertex, Distance>::print(const Vertex& v) const
+	{
+		std::function<void(const Vertex&)> action = [*this](const Vertex& vertex) { _print(vertex); };
+		walk(v, action);
+	}
+
+	template<typename Vertex, typename Distance>
+	void GraphSpace::Graph<Vertex, Distance>::vector_walk(const Vertex& v) const
+	{
+		std::vector<Vertex> result;
+		std::function<void(const Vertex&)> action = [*this, &result](const Vertex& vertex) { result.push_back(vertex); };
+	}
 
 	template<typename Vertex, typename Distance = double>
 	Vertex find_optimal_warehouse(Graph<Vertex, Distance>& graph) {
