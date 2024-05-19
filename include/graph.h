@@ -9,17 +9,15 @@ namespace GraphSpace
 	template<typename Vertex, typename Distance = double>
 	class Graph
 	{
-
+	public:
 		struct Edge
 		{
 			Vertex from;
 			Vertex to;
 			Distance distance;
 			Edge(Vertex from, Vertex to, Distance distance) :from(from), to(to), distance(distance) {}
-			bool operator==(const Edge& other) const {
-				return from == other.from && to == other.to && distance == other.distance;
-			}
 		};
+	private:
 		std::set<Vertex> _vertices;
 		std::unordered_map<Vertex, std::vector<Edge>> _edges;
 
@@ -37,7 +35,10 @@ namespace GraphSpace
 		bool has_edge(const Edge& e) const; //c учетом расстояния в Edge
 
 		//получение всех ребер, выходящих из вершины
-		std::vector<Edge> edges(const Vertex& vertex);
+		std::vector<Edge> edges(const Vertex& vertex)
+		{
+			return _edges[vertex];
+		}
 
 		size_t order() const; //порядок 
 		size_t degree(const Vertex& v) const; //степень вершины
@@ -96,8 +97,56 @@ namespace GraphSpace
 	template<typename Vertex, typename Distance>
 	void GraphSpace::Graph<Vertex, Distance>::add_edge(const Vertex& from, const Vertex& to, const Distance& d)
 	{
-		_edges[from].push_back({ from, to, d });
+		Edge new_edge(from, to, d);
+		if (has_edge(new_edge))
+			return;
+		if (!has_vertex(from))
+			_vertices.insert(from);
+		if (!has_vertex(to))
+			_vertices.insert(to);
+		_edges[from].push_back(new_edge);
 	}
 
+	template<typename Vertex, typename Distance>
+	bool GraphSpace::Graph<Vertex, Distance>::remove_edge(const Vertex& from, const Vertex& to)
+	{
+		if (!has_edge(from, to)) return false;
+		for (auto& e : _edges[from]) {
+			if (e.to == to) {
+				_edges[from].erase(e);
+				return true;
+			}
+		}
+		return false;
+	}
 
+	template<typename Vertex, typename Distance>
+	bool GraphSpace::Graph<Vertex, Distance>::has_edge(const Vertex& from, const Vertex& to) const
+	{
+		auto it = _edges.find(from);
+		if (it == _edges.end())
+			return false;
+		auto& edges_vec = it->second;
+		for (auto& e : edges_vec) {
+			if (e.to == to)
+				return true;
+		}
+		return false;
+	}	
+
+	template<typename Vertex, typename Distance>
+	bool GraphSpace::Graph<Vertex, Distance>::has_edge(const Edge& e) const
+	{
+		if (!has_edge(e.from, e.to))
+			return false;
+		auto it = _edges.find(e.from);
+		auto& edges_vec = it->second;
+		for (auto& edge : edges_vec) {
+			if (edge.to == e.to) {
+				if (e.distance == edge.distance)
+					return true;
+			}
+		}
+		return false;
+	}
 }
