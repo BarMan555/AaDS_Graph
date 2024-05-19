@@ -315,6 +315,7 @@ namespace GraphSpace
 	{
 		std::vector<Vertex> result;
 		std::function<void(const Vertex&)> action = [*this, &result](const Vertex& vertex) { result.push_back(vertex); };
+		walk(v, action);
 	}
 
 	template<typename Vertex, typename Distance = double>
